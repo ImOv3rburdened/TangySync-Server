@@ -51,7 +51,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\MareAPI\MareSynchronosAPI\MareSynchronos.API.csproj" />
+	  <ProjectReference Include="..\..\..\TangySync-API\MareSynchronosAPI\MareSynchronos.API.csproj" />
 	</ItemGroup>
 
 </Project>

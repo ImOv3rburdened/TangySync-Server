@@ -19,6 +19,13 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  
+  <ItemGroup>
+  <PackageReference Include="Discord.Net" Version="3.*" />
+  <PackageReference Include="Discord.Net.WebSocket" Version="3.*" />
+  <PackageReference Include="Discord.Net.Interactions" Version="3.*" />
+  <PackageReference Include="Newtonsoft.Json" Version="13.*" />
+</ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="3.17.0" />
@@ -35,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\MareAPI\MareSynchronosAPI\MareSynchronos.API.csproj" />
+    <ProjectReference Include="..\..\..\TangySync-API\MareSynchronosAPI\MareSynchronos.API.csproj" />
     <ProjectReference Include="..\MareSynchronosShared\MareSynchronosShared.csproj" />
   </ItemGroup>
 

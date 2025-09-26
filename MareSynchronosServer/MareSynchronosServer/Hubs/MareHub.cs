@@ -15,11 +15,12 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis.Extensions.Core.Abstractions;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace MareSynchronosServer.Hubs;
 
 [Authorize(Policy = "Authenticated")]
-public partial class MareHub : Hub<IMareHub>, IMareHub
+public partial class MareHub : Hub<IMareHub>
 {
     private static readonly ConcurrentDictionary<string, string> _userConnections = new(StringComparer.Ordinal);
     private readonly MareMetrics _mareMetrics;
@@ -209,4 +210,59 @@ public partial class MareHub : Hub<IMareHub>, IMareHub
 
         await base.OnDisconnectedAsync(exception).ConfigureAwait(false);
     }
+
+    #region P2P / WebRTC Signaling
+    [Authorize]
+    [Authorize]
+    [Authorize]
+    public async Task SendRtcOffer(string targetUid, string sdp)
+    {
+        if (!await IsSignalingAllowedAsync(UserUID, targetUid).ConfigureAwait(false))
+            throw new HubException("Not allowed to signal this user.");
+
+        var sender = await GetUserDataAsync(UserUID).ConfigureAwait(false);
+        await Clients.User(targetUid).Client_RtcOffer(sender, sdp).ConfigureAwait(false);
+    }
+
+    [Authorize]
+    public async Task SendRtcAnswer(string targetUid, string sdp)
+    {
+        if (!await IsSignalingAllowedAsync(UserUID, targetUid).ConfigureAwait(false))
+            throw new HubException("Not allowed to signal this user.");
+
+        var sender = await GetUserDataAsync(UserUID).ConfigureAwait(false);
+        await Clients.User(targetUid).Client_RtcAnswer(sender, sdp).ConfigureAwait(false);
+    }
+
+    [Authorize]
+    public async Task SendRtcIceCandidate(string targetUid, string candidate, string? sdpMid, int? sdpMLineIndex)
+    {
+        if (!await IsSignalingAllowedAsync(UserUID, targetUid).ConfigureAwait(false))
+            throw new HubException("Not allowed to signal this user.");
+
+        var sender = await GetUserDataAsync(UserUID).ConfigureAwait(false);
+        await Clients.User(targetUid).Client_RtcIceCandidate(sender, candidate, sdpMid, sdpMLineIndex).ConfigureAwait(false);
+    }
+
+    private async Task<bool> IsSignalingAllowedAsync(string senderUid, string targetUid)
+    {
+        var pair = await DbContext.Permissions.SingleOrDefaultAsync(p =>
+            (p.UserUID == senderUid && p.OtherUserUID == targetUid) ||
+            (p.UserUID == targetUid && p.OtherUserUID == senderUid)
+        ).ConfigureAwait(false);
+    
+        if (pair == null) return false;
+    
+        return true;
+    }
+
+    private async Task<UserData> GetUserDataAsync(string uid)
+    {
+        var user = await DbContext.Users.SingleAsync(u => u.UID == uid).ConfigureAwait(false);
+        return new UserData(
+            user.UID,
+            string.IsNullOrWhiteSpace(user.Alias) ? null : user.Alias
+        );
+    }
+    #endregion
 }

@@ -1,5 +1,6 @@
 ﻿using MareSynchronosShared.Models;
 using Microsoft.EntityFrameworkCore;
+using MareSynchronosShared.Models;
 
 namespace MareSynchronosShared.Data;
 
@@ -53,6 +54,9 @@ public class MareDbContext : DbContext
     public DbSet<CharaDataOriginalFile> CharaDataOriginalFiles { get; set; }
     public DbSet<CharaDataPose> CharaDataPoses { get; set; }
     public DbSet<CharaDataAllowance> CharaDataAllowances { get; set; }
+    public DbSet<Manifest> Manifests { get; set; }
+    public DbSet<P2PPeer> P2PPeers { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -141,5 +145,19 @@ public class MareDbContext : DbContext
         mb.Entity<CharaDataAllowance>().HasIndex(c => c.ParentId);
         mb.Entity<CharaDataAllowance>().HasOne(u => u.AllowedGroup).WithMany().HasForeignKey(u => u.AllowedGroupGID).OnDelete(DeleteBehavior.Cascade);
         mb.Entity<CharaDataAllowance>().HasOne(u => u.AllowedUser).WithMany().HasForeignKey(u => u.AllowedUserUID).OnDelete(DeleteBehavior.Cascade);
+        mb.Entity<Manifest>().ToTable("manifests");
+        mb.Entity<Manifest>().HasKey(m => m.FileHash);
+        mb.Entity<Manifest>().HasIndex(m => m.CreatedUtc);
+
+        mb.Entity<Manifest>()
+          .HasOne(m => m.FileCache)
+          .WithOne()
+          .HasForeignKey<Manifest>(m => m.FileHash)
+          .OnDelete(DeleteBehavior.Cascade);
+
+        mb.Entity<P2PPeer>().ToTable("p2p_peers");
+        mb.Entity<P2PPeer>().HasIndex(p => p.FileHash);
+        mb.Entity<P2PPeer>().HasIndex(p => p.Area);
+        mb.Entity<P2PPeer>().HasIndex(p => p.LastSeenUtc);
     }
 }
